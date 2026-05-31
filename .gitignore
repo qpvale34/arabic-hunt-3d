@@ -1,0 +1,11 @@
+node_modules/
+dist/
+output/
+*.log
+.codex-*.log
+.vite-*.log
+.remember/
+scripts/output/
+test-results/
+playwright-report/
+blob-report/

@@ -1,0 +1,48 @@
+{
+  "name": "electrobun-arabic-game",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "predev": "node scripts/sync-public-assets.mjs",
+    "dev": "vite --host 127.0.0.1 --port 4173",
+    "prebuild": "node scripts/sync-public-assets.mjs",
+    "build": "vite build",
+    "prepreview": "node scripts/sync-public-assets.mjs",
+    "preview": "vite preview --host 127.0.0.1 --port 4173",
+    "share": "powershell -ExecutionPolicy Bypass -File scripts/share-public.ps1",
+    "share:cloudflare": "powershell -ExecutionPolicy Bypass -File scripts/share-public.ps1 -TunnelProvider cloudflare",
+    "share:ngrok": "powershell -ExecutionPolicy Bypass -File scripts/share-public.ps1 -TunnelProvider ngrok",
+    "share:auto": "powershell -ExecutionPolicy Bypass -File scripts/share-public.ps1 -TunnelProvider auto",
+    "start:full": "npm run share:auto",
+    "test:e2e": "npx playwright test",
+    "test:e2e:smoke": "npx playwright test --grep \"should collect letters when player approaches them|should open nearby treasure chests and create loot bursts|should transition from Sun Court to Halloween Hallows after collecting all stage letters\"",
+    "test:e2e:letters": "npx playwright test tests/letter-collection.spec.js",
+    "test:e2e:physics": "npx playwright test tests/physics-interactions.spec.js",
+    "test:e2e:portals": "npx playwright test tests/portal-transition.spec.js",
+    "test:e2e:phase1": "npx playwright test tests/phase1-stabilization.spec.js",
+    "test:assets:allowlist": "node --test tests/asset-allowlist.test.mjs",
+    "test:server:50players": "node --test tests/server-50-player-load.test.mjs",
+    "test:server:coalescing": "node --test tests/server-roster-coalescing.test.mjs",
+    "test:e2e:headless": "powershell -ExecutionPolicy Bypass -Command \"$env:PLAYWRIGHT_HEADLESS='1'; npx playwright test\"",
+    "test:e2e:headed": "powershell -ExecutionPolicy Bypass -Command \"$env:PLAYWRIGHT_HEADED='1'; $env:PLAYWRIGHT_SLOWMO='250'; npx playwright test\"",
+    "test:e2e:debug": "powershell -ExecutionPolicy Bypass -Command \"$env:PLAYWRIGHT_DEBUG='1'; $env:PLAYWRIGHT_HEADED='1'; $env:PLAYWRIGHT_SLOWMO='500'; npx playwright test --headed\"",
+    "dev:all": "concurrently -n server,client \"npm run server\" \"npm run dev\"",
+    "load:browser:50": "node scripts/browser-load-harness.mjs --clients=50 --bootstrap=1 --headless=1",
+    "server": "node server/multiplayer-server.mjs"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "^0.19.3",
+    "nipplejs": "^0.10.2",
+    "qrcode": "^1.5.4",
+    "three": "^0.184.0",
+    "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "^4.3.0",
+    "@playwright/test": "^1.60.0",
+    "concurrently": "^9.2.1",
+    "playwright": "^1.60.0",
+    "vite": "^7.3.1"
+  }
+}

@@ -1,0 +1,5 @@
+
+> electrobun-arabic-game@0.1.0 server
+> node server/multiplayer-server.mjs
+
+[multiplayer] http://127.0.0.1:2567 · admin code: sun-court-admin

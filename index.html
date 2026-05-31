@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#1a120d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Arabic Letter Hunt - Sun Court</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Arabic Letter Hunt 3D oyun sahnesi"></canvas>
+
+      <section class="panel-shell minimap-shell hud-float">
+        <div class="row spread minimap-top">
+          <div>
+            <p class="micro-copy">Mini Harita</p>
+            <strong id="coordinate-label">0.0, 0.0</strong>
+          </div>
+          <div class="legend-chip">N</div>
+          <button id="minimap-toggle" class="minimap-toggle" type="button" aria-pressed="false" aria-label="Mini haritayi gizle">-</button>
+        </div>
+        <canvas
+          id="minimap-canvas"
+          width="220"
+          height="220"
+          aria-label="Mini harita"
+        ></canvas>
+      </section>
+
+      <section class="panel-shell realm-hud" id="realm-hud" aria-label="Cok oyunculu durum paneli">
+        <div class="realm-hud__head">
+          <span class="realm-hud__signal" aria-hidden="true"></span>
+          <div class="realm-hud__copy">
+            <strong id="realm-status">Bagli degil</strong>
+            <p id="realm-meta" class="realm-hud__meta">Lobby kapali</p>
+          </div>
+          <span class="realm-hud__count" id="realm-count">0</span>
+        </div>
+      </section>
+
+      <section class="panel-shell alphabet-hud" id="alphabet-hud" aria-label="Arapca alfabe ilerlemesi">
+        <div class="row spread alphabet-hud__head">
+          <div>
+            <p class="micro-copy">Arapca Alfabe</p>
+            <strong>Toplanan Harfler</strong>
+          </div>
+          <strong id="alphabet-progress">0 / 30</strong>
+        </div>
+        <div class="alphabet-grid" id="alphabet-grid" role="list" aria-label="Arapca harf ilerleme bandi"></div>
+      </section>
+
+      <button
+        id="quest-tab"
+        class="quest-tab"
+        type="button"
+        aria-controls="quest-window"
+        aria-expanded="false"
+      >
+        <span class="hud-tab__full">Quest · J</span>
+        <span class="hud-tab__compact" aria-hidden="true">Q</span>
+      </button>
+
+      <button
+        id="settings-tab"
+        class="settings-tab"
+        type="button"
+        aria-controls="settings-panel"
+        aria-expanded="false"
+      >
+        <span class="hud-tab__full">Ayarlar · O</span>
+        <span class="hud-tab__compact" aria-hidden="true">A</span>
+      </button>
+
+      <div class="fps-meter" id="fps-meter" aria-live="polite" aria-hidden="true">
+        FPS 60
+      </div>
+
+      <section
+        class="panel-shell quest-window"
+        id="quest-window"
+        aria-hidden="true"
+      >
+        <div class="row spread quest-window__head">
+          <div>
+            <p class="micro-copy">Quest Tracker</p>
+            <h3>Arabic Relic Hunt</h3>
+          </div>
+          <span class="quest-window__hint">J</span>
+        </div>
+        <div class="quest-grid">
+          <div>
+            <span>Toplanan</span>
+            <strong id="collected-count">0 / 0</strong>
+          </div>
+          <div>
+            <span>En Yakin Hedef</span>
+            <strong id="target-label">Hazirlaniyor</strong>
+          </div>
+          <div>
+            <span>Bolge</span>
+            <strong id="zone-label">Sunspire Dunes</strong>
+          </div>
+          <div>
+            <span>Durum</span>
+            <strong id="message-label">Yukleniyor</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-shell settings-panel" id="settings-panel" aria-hidden="true">
+        <div class="row spread settings-panel__head">
+          <div>
+            <p class="micro-copy">Ayarlar</p>
+            <h3>Oyun Seçenekleri</h3>
+          </div>
+          <button id="settings-close" class="settings-close" type="button" aria-label="Ayarlar panelini kapat">Kapat</button>
+        </div>
+
+        <form class="settings-form" id="settings-form">
+          <section class="settings-group">
+            <h4>Grafik ve Dünya</h4>
+            <label class="settings-field">
+              <span>Kalite</span>
+              <select id="settings-quality" name="quality">
+                <option value="auto">Otomatik</option>
+                <option value="low">Dusuk</option>
+                <option value="medium">Orta</option>
+                <option value="high">Yuksek</option>
+              </select>
+            </label>
+            <label class="settings-field">
+              <span>Harf Yogunlugu</span>
+              <input id="settings-letter-density" name="letterDensity" type="range" min="40" max="150" step="10" />
+              <strong data-value-for="settings-letter-density"></strong>
+            </label>
+            <label class="settings-field">
+              <span>Hazine Sandigi Yogunlugu</span>
+              <input id="settings-chest-density" name="chestDensity" type="range" min="50" max="180" step="10" />
+              <strong data-value-for="settings-chest-density"></strong>
+            </label>
+            <label class="settings-field">
+              <span>Karakter Boyutu</span>
+              <input id="settings-character-scale" name="characterScale" type="range" min="80" max="130" step="5" />
+              <strong data-value-for="settings-character-scale"></strong>
+            </label>
+            <label class="settings-field">
+              <span>Harf Boyutu</span>
+              <input id="settings-letter-scale" name="letterScale" type="range" min="70" max="150" step="5" />
+              <strong data-value-for="settings-letter-scale"></strong>
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>Mini Harita</span>
+              <input id="settings-minimap-enabled" name="minimapEnabled" type="checkbox" />
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>Ipuclari ve Etkilesim Metni</span>
+              <input id="settings-show-hints" name="showHints" type="checkbox" />
+            </label>
+          </section>
+
+          <section class="settings-group">
+            <h4>Kontrol ve Kamera</h4>
+            <label class="settings-field">
+              <span>Kamera Hassasiyeti</span>
+              <input id="settings-camera-sensitivity" name="cameraSensitivity" type="range" min="50" max="180" step="5" />
+              <strong data-value-for="settings-camera-sensitivity"></strong>
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>Kamera Y Ekseni Ters</span>
+              <input id="settings-invert-y" name="invertY" type="checkbox" />
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>Tam Ekran</span>
+              <input id="settings-fullscreen" name="fullscreen" type="checkbox" />
+            </label>
+          </section>
+
+          <section class="settings-group">
+            <h4>Ses</h4>
+            <label class="settings-field">
+              <span>Ana Ses</span>
+              <input id="settings-master-volume" name="masterVolume" type="range" min="0" max="100" step="5" />
+              <strong data-value-for="settings-master-volume"></strong>
+            </label>
+            <label class="settings-field">
+              <span>Muzik</span>
+              <input id="settings-music-volume" name="musicVolume" type="range" min="0" max="100" step="5" />
+              <strong data-value-for="settings-music-volume"></strong>
+            </label>
+            <label class="settings-field">
+              <span>Efekt</span>
+              <input id="settings-sfx-volume" name="sfxVolume" type="range" min="0" max="100" step="5" />
+              <strong data-value-for="settings-sfx-volume"></strong>
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>Arkaplan Muzigi</span>
+              <input id="settings-music-enabled" name="musicEnabled" type="checkbox" />
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>Yuruyus Sesleri</span>
+              <input id="settings-footsteps-enabled" name="footstepsEnabled" type="checkbox" />
+            </label>
+          </section>
+
+          <section class="settings-group">
+            <h4>Arayuz ve Erisilebilirlik</h4>
+            <label class="settings-field settings-field--inline">
+              <span>Hareketi Azalt</span>
+              <input id="settings-reduce-motion" name="reduceMotion" type="checkbox" />
+            </label>
+            <label class="settings-field settings-field--inline">
+              <span>FPS Gostergesi</span>
+              <input id="settings-show-fps" name="showFps" type="checkbox" />
+            </label>
+          </section>
+        </form>
+
+        <div class="settings-actions">
+          <button id="settings-reset" class="settings-action settings-action--ghost" type="button">Varsayilan</button>
+          <button id="settings-apply" class="settings-action" type="button">Uygula</button>
+        </div>
+      </section>
+
+      <section class="letter-card-shell" id="letter-card-shell" aria-hidden="true">
+        <div class="letter-card-shell__backdrop" id="letter-card-backdrop"></div>
+        <article class="panel-shell letter-card" aria-label="Harf bilgi karti">
+          <button id="letter-card-close" class="letter-card__close" type="button" aria-label="Harf kartini kapat">Kapat</button>
+
+          <div class="letter-card__hero">
+            <button id="letter-card-glyph-button" class="letter-card__glyph-pane letter-card__glyph-button" type="button" aria-label="Toplanan harfi dinle">
+              <div class="letter-card__glyph-head">
+                <p class="micro-copy">Toplanan Harf</p>
+                <span class="letter-card__glyph-listen">
+                  <span class="letter-card__speaker-icon" aria-hidden="true">🔊</span>
+                  <span>Dinle</span>
+                </span>
+              </div>
+              <img id="letter-card-image" class="letter-card__image" alt="Toplanan harf gorseli" />
+            </button>
+
+            <div class="letter-card__practice">
+              <div class="letter-card__audio">
+                <div class="letter-card__audio-head">
+                  <span class="micro-copy">Harekeli Okunus</span>
+                  <strong><span class="letter-card__speaker-icon" aria-hidden="true">🔊</span> Dinle</strong>
+                </div>
+                <div id="letter-card-audio-buttons" class="letter-card__audio-buttons"></div>
+              </div>
+
+              <div class="letter-card__forms">
+                <div class="letter-card__forms-head">
+                  <p class="micro-copy">Yazilis Bicimleri</p>
+                  <strong>Tek Basina · Basta · Ortada · Sonda</strong>
+                </div>
+                <div id="letter-card-forms-grid" class="letter-card__forms-grid"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="letter-card__summary">
+            <p class="micro-copy">Harf Bilgisi</p>
+            <h3 id="letter-card-title">Elif</h3>
+            <p id="letter-card-name" class="letter-card__name">ألف · Elif</p>
+            <p id="letter-card-description">Harf aciklamasi</p>
+
+            <div id="letter-card-facts" class="letter-card__facts"></div>
+          </div>
+
+          <div class="letter-card__example">
+            <div class="letter-card__example-head">
+              <p class="micro-copy">Ornek Kelime</p>
+              <button id="letter-card-example-audio" class="letter-card__speaker-button" type="button" aria-label="Ornek kelimeyi dinle">
+                <span class="letter-card__speaker-icon" aria-hidden="true">🔊</span>
+                <span>Dinle</span>
+              </button>
+            </div>
+            <button id="letter-card-example-button" class="letter-card__example-button" type="button" aria-label="Ornek kelimeyi dinle">
+              <img id="letter-card-example-image" class="letter-card__example-image" alt="Ornek kelime gorseli" />
+              <span class="letter-card__speaker-badge" aria-hidden="true">🔊</span>
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <section class="panel-shell combat-hud" id="combat-hud">
+        <div class="combat-hud__status">
+          <div class="portrait-badge">W</div>
+          <div class="status-copy">
+            <div class="row spread">
+              <div>
+                <p class="micro-copy">Sinif</p>
+                <h2 id="player-name">Desert Warden</h2>
+              </div>
+              <div class="level-chip">
+                <span>LV</span>
+                <strong id="level-label">1</strong>
+              </div>
+            </div>
+
+            <div class="resource-strip">
+              <span class="resource-strip__label">HP</span>
+              <div class="meter hp">
+                <span id="hp-fill"></span>
+              </div>
+              <strong id="hp-label">140 / 140</strong>
+            </div>
+
+            <div class="resource-strip">
+              <span class="resource-strip__label">MP</span>
+              <div class="meter mp">
+                <span id="mp-fill"></span>
+              </div>
+              <strong id="mp-label">90 / 90</strong>
+            </div>
+
+            <div class="wallet-strip">
+              <span class="wallet-strip__label">ALTIN</span>
+              <strong id="gold-label">0</strong>
+            </div>
+
+            <div class="wallet-strip wallet-strip--presence">
+              <span class="wallet-strip__label">ONLINE</span>
+              <strong id="presence-label">0</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="combat-hud__core">
+          <div class="row spread xp-rack__top">
+            <p class="micro-copy">Battle Memory</p>
+            <strong id="xp-label">0 / 120</strong>
+          </div>
+          <div class="xp-rack" id="xp-rack" aria-label="XP cubukleri"></div>
+          <section class="skill-dock" id="skill-dock" aria-label="Skill bar"></section>
+        </div>
+      </section>
+
+      <section class="panel overlay" id="map-select">
+        <p class="kicker">Harita Secimi</p>
+        <h1>Arabic Letter Hunt</h1>
+        <p>Bir harita sec ve maceraya basla!</p>
+        <div class="map-grid" id="map-grid">
+          <!-- Map cards will be injected here -->
+        </div>
+      </section>
+
+      <section class="panel overlay" id="menu">
+        <p class="kicker" id="menu-kicker">Lobby</p>
+        <h1 id="menu-title">Arabic Letter Hunt</h1>
+        <p id="menu-desc">
+          Ismini yazip lobbye gir. Admin oyunu baslatinca herkes ayni anda Sun Court'ta
+          harf toplamaya baslar.
+        </p>
+        <section class="multiplayer-entry" aria-label="Cok oyunculu giris">
+          <label class="entry-field" for="player-name-input">
+            <span>Karakter Adi</span>
+            <input
+              id="player-name-input"
+              type="text"
+              inputmode="text"
+              maxlength="24"
+              placeholder="Ornek: Emir"
+              autocomplete="nickname"
+            />
+          </label>
+          <div class="entry-grid" aria-live="polite">
+            <article class="entry-chip">
+              <span>Baglanti</span>
+              <strong id="multiplayer-status">Hazirlaniyor</strong>
+            </article>
+            <article class="entry-chip">
+              <span>Oyuncu</span>
+              <strong id="multiplayer-count">0</strong>
+            </article>
+          </div>
+          <p class="entry-help" id="multiplayer-help">
+            Ismini yaz, lobbye baglan ve adminin turu baslatmasini bekle.
+          </p>
+        </section>
+        <section class="character-entry" aria-label="Karakter secimi">
+          <div class="character-entry__head">
+            <div>
+              <span class="micro-copy">Sinif Secimi</span>
+              <h3 id="character-selection-title">Knight</h3>
+            </div>
+            <span class="character-entry__badge" id="character-selection-role">On Saf</span>
+          </div>
+          <p class="character-entry__summary" id="character-selection-desc">
+            Dengeli savasci. Mevcut beceri setiyle guvenli baslangic.
+          </p>
+          <div class="character-grid" id="character-grid"></div>
+        </section>
+        <button id="start-btn" class="action-button" disabled>
+          Yetenekler Yukleniyor...
+        </button>
+      </section>
+
+      <section class="panel overlay" id="win-screen">
+        <p class="kicker">Raid Clear</p>
+        <h2>Butun harfler bulundu.</h2>
+        <p id="win-copy">Siralama hesaplaniyor.</p>
+        <button id="restart-btn" class="action-button">Lobiye Don</button>
+      </section>
+
+      <section class="touch-ui" id="touch-ui" aria-label="Dokunmatik kontroller">
+        <div class="touch-stick" id="touch-stick" aria-label="Sanal joystick"></div>
+        <div class="touch-actions" id="touch-actions"></div>
+      </section>
+
+      <section class="mobile-immersive" id="mobile-immersive" aria-hidden="true">
+        <article class="panel-shell mobile-immersive__card">
+          <p class="micro-copy">Mobil Oyun Modu</p>
+          <h3 id="mobile-immersive-title">Telefonu Yatay Cevir</h3>
+          <p id="mobile-immersive-copy">
+            Daha genis gorus ve daha rahat kontrol icin telefonu yana cevir.
+          </p>
+          <button id="mobile-immersive-action" class="mobile-immersive__action" type="button">
+            Tam Ekran Dene
+          </button>
+        </article>
+      </section>
+
+      <div class="toast" id="toast" aria-live="polite"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

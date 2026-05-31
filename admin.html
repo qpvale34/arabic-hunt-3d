@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#10110e" />
+    <title>Arabic Letter Hunt Admin</title>
+  </head>
+  <body>
+    <main id="admin-app">
+      <section class="admin-hero">
+        <div>
+          <p class="hero-kicker">Lobby Host</p>
+          <h1>Canli tur kontrolu</h1>
+          <p class="hero-copy">
+            QR ile oyuncu al, lobby durumunu izle, turu tek komutla baslat, gerekirse reset at
+            ve finisher sirasini canli takip et.
+          </p>
+        </div>
+        <div class="hero-actions">
+          <span id="admin-status" class="status-pill">Hazir</span>
+          <a class="hero-link" href="./">Oyuncu Girisi</a>
+        </div>
+      </section>
+
+      <section class="admin-layout">
+        <article class="admin-card auth-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Yetki</p>
+              <h2>Admin Girisi</h2>
+            </div>
+          </div>
+          <form id="auth-form" class="stack-form">
+            <label class="field">
+              <span>Admin Kodu</span>
+              <input id="admin-code" type="password" autocomplete="current-password" />
+            </label>
+            <div class="inline-actions">
+              <button class="primary-button" type="submit">Baglan</button>
+              <button id="logout-button" class="ghost-button" type="button">Cikis</button>
+            </div>
+          </form>
+          <p id="admin-hint" class="hint-copy">Baglandiktan sonra panel 2 saniyede bir kendini yeniler.</p>
+        </article>
+
+        <article class="admin-card match-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Tur</p>
+              <h2>Lobby Durumu</h2>
+            </div>
+            <span id="generated-at" class="status-pill">Veri bekleniyor</span>
+          </div>
+          <div class="summary-grid">
+            <article class="summary-chip"><span>Aktif Oyuncu</span><strong id="summary-online">0</strong></article>
+            <article class="summary-chip"><span>Tur Durumu</span><strong id="summary-match-status">Lobi</strong></article>
+            <article class="summary-chip"><span>En Yuksek Puan</span><strong id="summary-top-score">0</strong></article>
+            <article class="summary-chip"><span>Bitiren</span><strong id="summary-finishers">0</strong></article>
+          </div>
+          <div class="inline-actions inline-actions--wide">
+            <button id="start-button" class="primary-button" type="button">Oyunu Baslat</button>
+            <button id="reset-button" class="ghost-button ghost-button--danger" type="button">Resetle</button>
+            <button id="refresh-button" class="ghost-button" type="button">Yenile</button>
+          </div>
+          <p id="match-hint" class="hint-copy">Oyuncular QR ile baglanip lobbyde bekler. Admin baslatinca ayni round icinde sahaya girer.</p>
+        </article>
+
+        <article class="admin-card qr-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">QR Join</p>
+              <h2>Oyuncu Giris Kodu</h2>
+            </div>
+            <span id="roster-meta" class="status-pill">0 oyuncu</span>
+          </div>
+          <div class="qr-layout">
+            <div class="qr-shell">
+              <canvas id="join-qr-canvas" width="220" height="220" aria-label="Oyuncu giris QR kodu"></canvas>
+            </div>
+            <div class="qr-copy">
+              <strong>Oyuncular bu kareyi tarayip isimlerini yazar.</strong>
+              <p id="join-link-status" class="hint-copy">Public link acik degilse QR sadece yerel agda ise yarar.</p>
+              <div class="inline-actions inline-actions--stack">
+                <button id="join-link-copy" class="ghost-button" type="button">Giris Linkini Kopyala</button>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="admin-card announce-card">
+          <div class="card-head">
+            <div>
+              <p class="card-kicker">Yayin</p>
+              <h2>Duyuru Gonder</h2>
+            </div>
+          </div>
+          <form id="announce-form" class="stack-form">
+            <label class="field">
+              <span>Mesaj</span>
+              <textarea id="announcement-message" rows="4" placeholder="Ornek: Tur 10 saniye sonra basliyor."></textarea>
+            </label>
+            <div class="inline-actions">
+              <button class="primary-button" type="submit">Duyur</button>
+            </div>
+          </form>
+          <div id="event-log" class="event-log"></div>
+        </article>
+
+        <article class="admin-card leaderboard-card">
+          <div class="card-head"><div><p class="card-kicker">Skor</p><h2>Canli Liderlik</h2></div></div>
+          <div id="leaderboard-body" class="list-board"></div>
+        </article>
+
+        <article class="admin-card finishers-card">
+          <div class="card-head"><div><p class="card-kicker">Finisher</p><h2>Bitirenler</h2></div></div>
+          <div id="finishers-body" class="list-board"></div>
+        </article>
+
+        <article class="admin-card roster-card">
+          <div class="card-head"><div><p class="card-kicker">Oyuncular</p><h2>Aktif Roster</h2></div></div>
+          <div class="table-wrap">
+            <table class="roster-table">
+              <thead>
+                <tr><th>Durum</th><th>Oyuncu</th><th>Puan</th><th>Harf</th><th>Yer</th><th>Son Gorulme</th><th>Islem</th></tr>
+              </thead>
+              <tbody id="roster-body"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <script type="module" src="/src/admin.js"></script>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,66 @@
+
+src\main.js:405:    portalAnchor: null,
+src\main.js:451:  portal: null,
+src\main.js:454:  nearestPortalDistance: null,
+src\main.js:1111:  portal: new THREE.MeshBasicMaterial({ color: "#69e5ff", transparent: true, opacity: 0.78, side: THREE.DoubleSide }),
+src\main.js:1594:function clearPortal() {
+src\main.js:1595:  if (state.portal) {
+src\main.js:1596:    worldGroup.remove(state.portal.group);
+src\main.js:1598:  state.portal = null;
+src\main.js:1599:  state.nearestPortalDistance = null;
+src\main.js:1602:function createStagePortal(targetStage) {
+src\main.js:1603:  if (state.portal || !targetStage) {
+src\main.js:1607:  const anchor = state.world.portalAnchor ?? {
+src\main.js:1673:  state.portal = {
+src\main.js:1684:  state.nearestPortalDistance = Math.hypot(anchor.x - state.player.position.x, anchor.z - state.player.position.z);
+src\main.js:1687:  return state.portal;
+src\main.js:1690:function updatePortal(delta) {
+src\main.js:1691:  if (!state.portal) {
+src\main.js:1692:    state.nearestPortalDistance = null;
+src\main.js:1697:  state.portal.ring.rotation.z += delta * 0.7;
+src\main.js:1698:  state.portal.veil.rotation.y += delta * 0.55;
+src\main.js:1699:  state.portal.core.quaternion.copy(camera.quaternion);
+src\main.js:1700:  state.portal.core.material.opacity = 0.44 + pulse * 0.18;
+src\main.js:1701:  state.portal.veil.material.opacity = 0.18 + pulse * 0.12;
+src\main.js:1702:  state.portal.groundRing.scale.setScalar(1 + pulse * 0.12);
+src\main.js:1703:  state.portal.groundRing.material.opacity = 0.28 + pulse * 0.2;
+src\main.js:1704:  state.portal.group.position.y = state.world.floorTop + Math.sin(state.elapsed * 1.9) * 0.08;
+src\main.js:1705:  state.nearestPortalDistance = Math.hypot(state.portal.x - state.player.position.x, state.portal.z - state.player.position.z);
+src\main.js:1737:function tryUseStagePortal() {
+src\main.js:1740:    || !state.portal
+src\main.js:1742:    || state.nearestPortalDistance === null
+src\main.js:1743:    || state.nearestPortalDistance > 3
+src\main.js:1748:  void transitionToStage(state.portal.targetStage);
+src\main.js:1758:  clearPortal();
+src\main.js:1765:  state.nearestPortalDistance = null;
+src\main.js:1771:  state.world.portalAnchor = null;
+src\main.js:1809:  updatePortal(0);
+src\main.js:1845:  state.world.portalAnchor = {
+src\main.js:1923:  placeTemplate(state.templates.halloweenArchGate, state.world.portalAnchor.x, 0, state.world.portalAnchor.z, {
+src\main.js:1927:  placeTemplate(state.templates.halloweenPostLantern, -tileSize * 1.28, 0, state.world.portalAnchor.z + tileSize * 0.18, {
+src\main.js:1932:  placeTemplate(state.templates.halloweenPostLantern, tileSize * 1.28, 0, state.world.portalAnchor.z + tileSize * 0.18, {
+src\main.js:1937:  placePumpkinCluster(-tileSize * 1.1, state.world.portalAnchor.z + tileSize * 0.95, 12.4, 1.55);
+src\main.js:1938:  placePumpkinCluster(tileSize * 1.1, state.world.portalAnchor.z + tileSize * 0.95, 18.9, 1.55);
+src\main.js:2184:  state.world.portalAnchor = null;
+src\main.js:3536:      if (!tryUseStagePortal()) {
+src\main.js:3944:  updatePortal(delta);
+src\main.js:3969:    if (state.nearestPortalDistance !== null && state.nearestPortalDistance <= 1.9) {
+src\main.js:3970:      tryUseStagePortal();
+src\main.js:4476:  state.interactionHint = state.mode === "playing" && state.settings.showHints && state.portal && state.nearestPortalDistance !== null && state.nearestPortalDistance <= 4.4
+src\main.js:4477:    ? `${state.portal.label ?? "Buyuk Gecit"} aktif · esige gir veya E bas`
+src\main.js:4968:      createStagePortal(nextStage);
+src\main.js:5126:  if (state.portal) {
+src\main.js:5127:    const x = center + state.portal.x * scale;
+src\main.js:5128:    const y = center + state.portal.z * scale;
+src\main.js:5129:    const isNearest = state.nearestPortalDistance !== null && state.nearestPortalDistance <= 4.4;
+src\main.js:5245:    const portalActive = state.portal && state.nearestPortalDistance !== null && state.nearestPortalDistance <= 5.2;
+src\main.js:5254:      : portalActive
+src\main.js:5255:        ? `${state.portal.label ?? "Buyuk Gecit"} · ${state.nearestPortalDistance.toFixed(1)}m`
+src\main.js:5369:      nearestPortalDistance: state.nearestPortalDistance !== null ? Number(state.nearestPortalDistance.toFixed(2)) : null,
+src\main.js:5436:    portal: state.portal
+src\main.js:5438:        label: state.portal.label ?? null,
+src\main.js:5439:        targetStage: state.portal.targetStage,
+src\main.js:5440:        x: Number(state.portal.x.toFixed(2)),
+src\main.js:5441:        z: Number(state.portal.z.toFixed(2)),
+src\main.js:5442:        distance: state.nearestPortalDistance !== null ? Number(state.nearestPortalDistance.toFixed(2)) : null,
+
