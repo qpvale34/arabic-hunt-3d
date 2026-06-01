@@ -9,3 +9,10 @@ scripts/output/
 test-results/
 playwright-report/
 blob-report/
+
+# Foreign dependency: full Rust Bevy engine source checkout
+# The project only consumes a single OGG file from bevy/assets/sounds/;
+# see sync-public-assets.mjs and src/main.js (backgroundMusicUrl).
+# Rust sources, Cargo metadata, and target/ build artifacts must not be tracked.
+bevy/
+bevy-target-cache/

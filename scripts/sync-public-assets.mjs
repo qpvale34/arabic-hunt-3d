@@ -35,6 +35,9 @@ const mimeByExtension = {
   ".jpeg": "image/jpeg",
   ".webp": "image/webp",
   ".bin": "application/octet-stream",
+  ".ogg": "audio/ogg",
+  ".mp3": "audio/mpeg",
+  ".wav": "audio/wav",
 };
 
 const runtimeCompressedAssets = {
@@ -56,6 +59,7 @@ const runtimeCompressedAssets = {
   "/assets/runtime/characters/Mage.glb": "kaykit_character_pack_adventures/Characters/gltf/Mage.glb",
   "/assets/runtime/characters/Rogue.glb": "kaykit_character_pack_adventures/Characters/gltf/Rogue.glb",
   "/assets/runtime/characters/Rogue_Hooded.glb": "kaykit_character_pack_adventures/Characters/gltf/Rogue_Hooded.glb",
+  "/assets/runtime/sounds/Epic orchestra music.ogg": "sounds/Epic orchestra music.ogg",
 };
 
 function listFiles(targetPath) {
@@ -76,7 +80,11 @@ function listFiles(targetPath) {
 
 function findPublicAssetRefs() {
   const refs = new Set(Object.keys(runtimeCompressedAssets));
-  const matcher = /(?<![A-Za-z0-9_.-])\/assets\/[A-Za-z0-9_./-]+/g;
+  // Match asset references inside source code regardless of whether the path
+  // is written with a leading slash (`/assets/...` in a JSON manifest) or
+  // without one (`assets/...` inside an `assetPath("assets/...")` call). The
+  // negative lookbehind blocks matches inside larger identifiers or paths.
+  const matcher = /(?<![A-Za-z0-9_./-])(?:\/)?assets\/[A-Za-z0-9_./-]+/g;
 
   sourceScanTargets
     .flatMap((targetPath) => listFiles(targetPath))
@@ -85,7 +93,8 @@ function findPublicAssetRefs() {
       const content = readFileSync(filePath, "utf8");
       for (const match of content.matchAll(matcher)) {
         if (match[0].endsWith(".glb")) {
-          refs.add(match[0]);
+          const normalized = match[0].startsWith("/") ? match[0] : `/${match[0]}`;
+          refs.add(normalized);
         }
       }
     });
@@ -177,6 +186,35 @@ function compressAsset(sourcePath, targetPath) {
     return "cached";
   }
 
+  const sourceExt = extname(sourcePath).toLowerCase();
+  const targetExt = extname(targetPath).toLowerCase();
+
+  // .gltf source (multi-file: .gltf + .bin + textures) targeting a .glb path
+  // is converted to a single-file binary GLB via gltf-transform copy. This
+  // is what feeds the halloween / hex stage assets which only ship as
+  // split .gltf + .bin pairs in assets/.
+  if (sourceExt === ".gltf" && targetExt === ".glb") {
+    const result = spawnSync(
+      process.execPath,
+      [gltfTransformCliPath, "copy", sourcePath, targetPath],
+      {
+        cwd: projectRoot,
+        encoding: "utf8",
+      },
+    );
+    if (result.status !== 0) {
+      throw new Error(result.stderr || result.stdout || `gltf-transform copy failed for ${sourcePath}`);
+    }
+    return "embedded";
+  }
+
+  // Non-GLB / non-gltf assets (audio OGG/MP3/WAV, etc.) are copied as-is.
+  // gltf-transform meshopt is only meaningful for 3D geometry buffers.
+  if (sourceExt !== ".glb") {
+    copyFileSync(sourcePath, targetPath);
+    return "copied";
+  }
+
   const result = spawnSync(
     process.execPath,
     [gltfTransformCliPath, "meshopt", sourcePath, targetPath, "--level", "high"],
@@ -255,6 +293,8 @@ function removeEmptyDirectories(targetPath) {
 const publicRefs = findPublicAssetRefs();
 const createdDirs = new Set();
 let compressedCount = 0;
+let copiedCount = 0;
+let embeddedCount = 0;
 let cachedCount = 0;
 
 rmSync(publicAssetsDir, { recursive: true, force: true });
@@ -275,6 +315,12 @@ for (const publicRef of publicRefs) {
   if (result === "compressed") {
     compressedCount += 1;
     console.log(`[sync-public-assets] Compressed ${relative(projectRoot, sourcePath)} -> ${relative(projectRoot, targetPath)}`);
+  } else if (result === "embedded") {
+    embeddedCount += 1;
+    console.log(`[sync-public-assets] Embedded   ${relative(projectRoot, sourcePath)} -> ${relative(projectRoot, targetPath)}`);
+  } else if (result === "copied") {
+    copiedCount += 1;
+    console.log(`[sync-public-assets] Copied     ${relative(projectRoot, sourcePath)} -> ${relative(projectRoot, targetPath)}`);
   } else {
     cachedCount += 1;
   }
@@ -302,6 +348,6 @@ if (!publicRefs.length) {
   )].sort();
   console.log(
     `[sync-public-assets] Synced ${publicRefs.length} compressed object refs across: ${topLevelDirs.join(", ")} `
-    + `(rebuilt ${compressedCount}, cached ${cachedCount})`,
+    + `(compressed ${compressedCount}, embedded ${embeddedCount}, copied ${copiedCount}, cached ${cachedCount})`,
   );
 }

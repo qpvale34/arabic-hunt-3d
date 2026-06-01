@@ -12,10 +12,18 @@ const adminHtmlPath = path.join(repoRoot, "admin.html");
 const hostHtmlPath = path.join(repoRoot, "host.html");
 const adminJsPath = path.join(repoRoot, "src", "admin.js");
 
+const MULTIPLAYER_ADMIN_CODE = process.env.MULTIPLAYER_ADMIN_CODE;
+if (!MULTIPLAYER_ADMIN_CODE) {
+  throw new Error(
+    "[multiplayer-server] MULTIPLAYER_ADMIN_CODE env var is required. " +
+      "Set it in your environment or a local .env file before starting the server."
+  );
+}
+
 const CONFIG = {
   host: process.env.MULTIPLAYER_HOST || "127.0.0.1",
   port: Number(process.env.MULTIPLAYER_PORT ?? 2567) || 2567,
-  adminCode: process.env.MULTIPLAYER_ADMIN_CODE || "sun-court-admin",
+  adminCode: MULTIPLAYER_ADMIN_CODE,
   totalLetters: Number(process.env.MULTIPLAYER_TOTAL_LETTERS ?? 30) || 30,
   appOrigin: (process.env.MULTIPLAYER_APP_ORIGIN || "").trim(),
   adminSessionTtlMs: 12 * 60 * 60 * 1000,

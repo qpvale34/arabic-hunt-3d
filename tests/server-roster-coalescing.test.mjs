@@ -37,6 +37,7 @@ test('server coalesces bursty snapshot roster broadcasts', async (t) => {
       MULTIPLAYER_HOST: HOST,
       MULTIPLAYER_PORT: String(PORT),
       MULTIPLAYER_ROSTER_INTERVAL_MS: '180',
+      MULTIPLAYER_ADMIN_CODE: 'test-admin-code',
     },
     stdio: 'pipe',
   });

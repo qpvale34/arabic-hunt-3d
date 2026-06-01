@@ -30,7 +30,7 @@ test("sync-public-assets only emits allowlisted compressed public object assets"
   assert.ok(files.length > 0, "expected synced public asset files");
   assert.ok(files.every((filePath) => !/\.(obj|mtl|import)$/i.test(filePath)), "unexpected raw asset sidecars copied");
   assert.ok(
-    files.every((filePath) => /\.(glb|gltf|js|wasm|json|md)$/i.test(filePath)),
+    files.every((filePath) => /\.(glb|gltf|js|wasm|json|md|ogg|mp3|wav)$/i.test(filePath)),
     "public assets should only contain compressed/fallback object assets and runtime support files",
   );
   assert.ok(

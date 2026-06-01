@@ -26,7 +26,7 @@ function assetPath(relativePath) {
 
 const runtimeTextureManifestUrl = assetPath("assets/runtime/texture-manifest.json");
 
-const backgroundMusicUrl = new URL("../bevy/assets/sounds/Epic orchestra music.ogg", import.meta.url).href;
+const backgroundMusicUrl = assetPath("assets/sounds/Epic orchestra music.ogg");
 
 const letterModules = import.meta.glob("../assets/arabic_huruf/*.png", {
   eager: true,

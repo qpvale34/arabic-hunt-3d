@@ -5,7 +5,7 @@ import { collectCurrentStage, readState, useActivePortal } from './helpers/gameS
 test.describe('Portal Transition Tests', () => {
   test.setTimeout(180000);
 
-  test('should transition from Sun Court to Halloween Hallows after collecting all stage letters', async ({ page }) => {
+  test('should transition from Sun Court to Halloween Hollows after collecting all stage letters', async ({ page }) => {
     await startGame(page);
 
     const clearedState = await collectCurrentStage(page);
@@ -18,7 +18,7 @@ test.describe('Portal Transition Tests', () => {
     expect(transitionedState.alphabet.currentStageLetterIds).toEqual([11, 12, 13, 14, 15, 16, 17, 18, 19, 20]);
   });
 
-  test('should transition from Halloween Hallows to Hexagon Village after collecting all stage letters', async ({ page }) => {
+  test('should transition from Halloween Hollows to Hexagon Village after collecting all stage letters', async ({ page }) => {
     await startGame(page);
 
     await collectCurrentStage(page);
