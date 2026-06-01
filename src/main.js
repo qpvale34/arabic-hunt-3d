@@ -396,6 +396,7 @@ const dom = {
   menuDesc: document.querySelector("#menu-desc"),
   winScreen: document.querySelector("#win-screen"),
   startBtn: document.querySelector("#start-btn"),
+  singlePlayerBtn: document.querySelector("#single-player-btn"),
   restartBtn: document.querySelector("#restart-btn"),
   backToMaps: document.querySelector("#back-to-maps"),
   toast: document.querySelector("#toast"),
@@ -593,7 +594,7 @@ function selectMap(mapKey) {
   dom.startBtn.textContent = `${map.nameTr}'de Basla`;
 
   showMenuForMap(mapKey);
-  if (multiplayer.isConnected()) {
+  if (multiplayer.isConnected() && !state.session.singlePlayer) {
     multiplayer.send({
       type: "profile",
       name: state.session.playerName,
@@ -828,7 +829,7 @@ async function applyCharacterSelection(characterId, { silent = false } = {}) {
 
 async function selectCharacter(characterId) {
   const normalized = await applyCharacterSelection(characterId);
-  if (multiplayer.isConnected()) {
+  if (multiplayer.isConnected() && !state.session.singlePlayer) {
     multiplayer.send({
       type: "profile",
       name: state.session.playerName || sanitizePlayerName(dom.playerNameInput?.value || ""),
@@ -1168,6 +1169,7 @@ const state = {
     playerId: "",
     connectionStatus: "idle",
     connectionDetail: "",
+    singlePlayer: false,
     roster: [],
     pendingRoster: null,
     remotePlayers: new Map(),
@@ -1369,7 +1371,13 @@ function syncStartButtonState() {
     return;
   }
 
-  if (!multiplayer.isConnected()) {
+  if (state.session.singlePlayer) {
+    dom.startBtn.disabled = true;
+    dom.startBtn.textContent = "Tek Oyuncu Modu";
+    return;
+  }
+
+  if (!isMultiplayerConnected()) {
     dom.startBtn.disabled = false;
     dom.startBtn.textContent = "Lobiye Gir";
     return;
@@ -1386,6 +1394,12 @@ function syncStartButtonState() {
     return;
   }
   dom.startBtn.textContent = "Lobidesin";
+
+  if (dom.singlePlayerBtn) {
+    const showSinglePlayer = !state.session.singlePlayer && !multiplayer.isConnected();
+    dom.singlePlayerBtn.hidden = !showSinglePlayer;
+    dom.singlePlayerBtn.disabled = !state.loaded;
+  }
 }
 
 function syncMultiplayerSummary() {
@@ -1416,7 +1430,9 @@ function syncMultiplayerSummary() {
     dom.presenceLabel.textContent = String(totalPlayers);
   }
   if (dom.realmStatus) {
-    if (!multiplayer.isConnected()) {
+    if (state.session.singlePlayer) {
+      dom.realmStatus.textContent = state.session.match.status === "running" ? "Tek Oyuncu" : "Hazir";
+    } else if (!multiplayer.isConnected()) {
       dom.realmStatus.textContent = "Bagli degil";
     } else if (state.session.match.status === "running") {
       dom.realmStatus.textContent = "Tur Canli";
@@ -1427,7 +1443,11 @@ function syncMultiplayerSummary() {
     }
   }
   if (dom.realmMeta) {
-    if (!multiplayer.isConnected()) {
+    if (state.session.singlePlayer) {
+      dom.realmMeta.textContent = state.session.match.status === "running"
+        ? `${state.collectedCount} / ${state.totalCollectibles} harf toplandi`
+        : "Tek oyuncu modu";
+    } else if (!multiplayer.isConnected()) {
       dom.realmMeta.textContent = "Ismini yazip lobbye baglan.";
     } else if (state.session.match.status === "running") {
       const leadName = livePlayers[0]?.name || "Oyuncular";
@@ -1441,7 +1461,9 @@ function syncMultiplayerSummary() {
     }
   }
   if (dom.multiplayerHelp) {
-    if (!multiplayer.isConnected()) {
+    if (state.session.singlePlayer) {
+      dom.multiplayerHelp.textContent = "Tek oyuncu modundasin. Tum harfleri topla!";
+    } else if (!multiplayer.isConnected()) {
       dom.multiplayerHelp.textContent = "Ismini yaz, lobbye baglan ve adminin turu baslatmasini bekle.";
     } else if (state.session.match.status === "running") {
       dom.multiplayerHelp.textContent = state.session.match.allowedRoundId === state.session.match.roundId
@@ -1713,6 +1735,9 @@ function buildMultiplayerSnapshot() {
 }
 
 function sendMultiplayerSnapshot(force = false) {
+  if (state.session.singlePlayer) {
+    return;
+  }
   if (!multiplayer.isConnected()) {
     return;
   }
@@ -1743,6 +1768,29 @@ async function ensureMultiplayerReady() {
   });
   state.session.playerId = connection.playerId || multiplayer.playerId || "";
   sendMultiplayerSnapshot(true);
+}
+
+async function startSinglePlayer() {
+  const playerName = sanitizePlayerName(dom.playerNameInput?.value || "Oyuncu");
+  state.session.playerName = storePlayerName(playerName);
+  if (dom.playerNameInput) {
+    dom.playerNameInput.value = state.session.playerName;
+  }
+  state.session.singlePlayer = true;
+  state.session.playerId = "local-player";
+  state.session.connectionStatus = "connected";
+  state.session.connectionDetail = "Tek oyuncu modu";
+
+  await handleMatchState({
+    status: "running",
+    roundId: 1,
+    allowedRoundId: 1,
+    totalLetters: totalLetterCount,
+  });
+}
+
+function isMultiplayerConnected() {
+  return state.session.singlePlayer || multiplayer.isConnected();
 }
 
 function syncWinPlacement(place) {
@@ -5943,6 +5991,17 @@ function attachEvents() {
     }
   });
 
+  dom.singlePlayerBtn?.addEventListener("click", async () => {
+    if (!state.loaded) {
+      return;
+    }
+    try {
+      await startSinglePlayer();
+    } catch (error) {
+      showToast(error.message, 6000);
+    }
+  });
+
   dom.restartBtn.addEventListener("click", () => {
     void resetGame(true);
   });
@@ -5956,7 +6015,7 @@ function attachEvents() {
     if (sanitized) {
       state.session.playerName = storePlayerName(sanitized);
       dom.playerNameInput.value = state.session.playerName;
-      if (multiplayer.isConnected()) {
+      if (multiplayer.isConnected() && !state.session.singlePlayer) {
         multiplayer.send({
           type: "profile",
           name: state.session.playerName,
@@ -7898,7 +7957,7 @@ function syncUi() {
     const activeMapKey = getActiveMultiplayerMapKey();
     const count = Math.max(
       1,
-      state.session.roster.filter((player) => getNormalizedRemoteMapKey(player) === activeMapKey).length || (multiplayer.isConnected() ? 1 : 0),
+      state.session.roster.filter((player) => getNormalizedRemoteMapKey(player) === activeMapKey).length || (isMultiplayerConnected() ? 1 : 0),
     );
     dom.presenceLabel.textContent = String(count);
   }
@@ -8134,7 +8193,7 @@ function renderGameToText() {
       mana: skill.cost,
     })),
     multiplayer: {
-      connected: multiplayer.isConnected(),
+      connected: isMultiplayerConnected(),
       connectionStatus: state.session.connectionStatus,
       status: state.session.match.status,
       roundId: state.session.match.roundId,
